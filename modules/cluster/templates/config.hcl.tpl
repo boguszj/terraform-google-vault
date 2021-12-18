@@ -66,6 +66,9 @@ listener "tcp" {
 
 # Send data to statsd (Stackdriver monitoring)
 telemetry {
-  statsd_address   = "127.0.0.1:8125"
-  disable_hostname = true
+  stackdriver_project_id = "${stackdriver_project_id}"
+  stackdriver_location   = "$${stackdriver_location}"
+  stackdriver_namespace  = "vault"
+  disable_hostname       = true
+  enable_hostname_label  = true
 }

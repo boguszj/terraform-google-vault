@@ -42,7 +42,8 @@ useradd -d /etc/vault.d -s /bin/false vault
 # Vault config
 mkdir -p /etc/vault.d
 mkdir /etc/vault.d/plugins
-cat <<"EOF" > /etc/vault.d/config.hcl
+export stackdriver_location=$(basename `curl -s "http://metadata.google.internal/computeMetadata/v1/instance/zone" -H "Metadata-Flavor: Google"`)
+envsubst <<"EOF" > /etc/vault.d/config.hcl
 ${config}
 EOF
 chmod 0600 /etc/vault.d/config.hcl
@@ -186,108 +187,9 @@ if ( $programname == "vault" ) then {
 EOF
 systemctl restart rsyslog
 
-# Install Stackdriver for logging and monitoring
-# Logging Agent: https://cloud.google.com/logging/docs/agent/installation
-curl -sSfL https://dl.google.com/cloudagents/add-logging-agent-repo.sh | bash
-# Monitoring Agent: https://cloud.google.com/monitoring/agent/installation
-curl -sSfL https://dl.google.com/cloudagents/add-monitoring-agent-repo.sh | bash
-apt-get update -yqq
-# Install structured logs
-apt-get install -yqq 'stackdriver-agent=6.*' 'google-fluentd=1.*' google-fluentd-catch-all-config-structured
-
-# Start Stackdriver logging agent and setup the filesystem to be ready to
-# receive audit logs
-mkdir -p /etc/google-fluentd/config.d
-cat <<"EOF" > /etc/google-fluentd/config.d/vaultproject.io.conf
-<source>
-  @type tail
-  format json
-
-  time_type "string"
-  time_format "%Y-%m-%dT%H:%M:%S.%N%z"
-  keep_time_key true
-
-  path /var/log/vault/audit.log
-  pos_file /var/lib/google-fluentd/pos/vault.audit.pos
-  read_from_head true
-  tag vaultproject.io/audit
-</source>
-
-<filter vaultproject.io/audit>
-  @type record_transformer
-  enable_ruby true
-  <record>
-    message "$${record.dig('request', 'id') || '-'} $${record.dig('request', 'remote_address') || '-'} $${record.dig('auth', 'display_name') || '-'} $${record.dig('request', 'operation') || '-'} $${record.dig('request', 'path') || '-'}"
-    host "#{Socket.gethostname}"
-  </record>
-</filter>
-
-<source>
-  @type tail
-  format /^(?<time>[^ ]+) \[(?<severity>[^ ]+)\][ ]+(?<source>[^:]+): (?<message>.*)/
-
-  time_type "string"
-  time_format "%Y-%m-%dT%H:%M:%S.%N%z"
-  keep_time_key true
-
-  path /var/log/vault/server.log
-  pos_file /var/lib/google-fluentd/pos/vault.server.pos
-  read_from_head true
-  tag vaultproject.io/server
-</source>
-
-<filter vaultproject.io/server>
-  @type record_transformer
-  enable_ruby true
-  <record>
-    message "$${record['source']}: $${record['message']}"
-    severity "$${(record['severity'] || '').downcase}"
-    host "#{Socket.gethostname}"
-  </record>
-</filter>
-EOF
-systemctl enable google-fluentd
-systemctl restart google-fluentd
-
-# Install logrotate
-apt-get install -yqq logrotate
-
-# Configure logrotate for Vault audit logs
-mkdir -p /etc/logrotate.d
-cat <<"EOF" > /etc/logrotate.d/vaultproject.io
-/var/log/vault/*.log {
-  daily
-  rotate 3
-  missingok
-  compress
-  notifempty
-  create 0640 vault adm
-  sharedscripts
-  postrotate
-    /bin/systemctl reload vault 2> /dev/null
-    true
-  endscript
-}
-EOF
-
-# Start Stackdriver monitoring
-mkdir -p /opt/stackdriver/collectd/etc/collectd.d /etc/stackdriver/collectd.d
-curl -sSfLo /etc/stackdriver/collectd.d/statsd.conf \
-  https://raw.githubusercontent.com/Stackdriver/stackdriver-agent-service-configs/master/etc/collectd.d/statsd.conf
-
-# On GCE instances, swap is not enabled.  The collectd swap plugin is enabled
-# by default and generates frequent error messages trying to divide by zero
-# when there is no swap.  This perl command is an in-place edit to disable the
-# swap plugin.  The intent is to prevent the spurious log messages and avoid
-# having to filter them in stackdriver.
-#
-# The error string related to this is:
-# `wg_typed_value_create_from_value_t_inline failed for swap/percent/value`
-# See https://issuetracker.google.com/issues/161054680#comment5
-perl -i -pe 'BEGIN{undef $/;} s,LoadPlugin swap.*?/Plugin>,# swap plugin disabled by startup-script,smg' /etc/stackdriver/collectd.conf
-
-systemctl enable stackdriver-agent
-service stackdriver-agent restart
+# Install Ops Agent for logging and monitoring
+curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
+sudo bash add-google-cloud-ops-agent-repo.sh --also-install
 
 #########################################
 ##          user_startup_script        ##

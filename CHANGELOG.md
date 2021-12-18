@@ -6,6 +6,8 @@ and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [6.2.0](https://www.github.com/terraform-google-modules/terraform-google-vault/compare/v6.1.0...v6.2.0) (2021-12-17)
+
 ## [6.1.0](https://www.github.com/terraform-google-modules/terraform-google-vault/compare/v6.0.0...v6.1.0) (2021-12-02)
 
 

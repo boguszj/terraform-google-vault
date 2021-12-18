@@ -328,7 +328,7 @@ variable "manage_tls" {
 
 variable "tls_ca_subject" {
   description = "The `subject` block for the root CA certificate."
-  type = object({
+  type        = object({
     common_name         = string,
     organization        = string,
     organizational_unit = string,
