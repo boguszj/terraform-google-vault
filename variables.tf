@@ -86,18 +86,17 @@ variable "storage_bucket_enable_versioning" {
 
 variable "storage_bucket_lifecycle_rules" {
   type = list(object({
-    action = map(object({
+    action = object({
       type          = string,
       storage_class = string
-    })),
-    condition = map(object({
+    }),
+    condition = object({
       age                   = number,
       created_before        = string,
       with_state            = string,
-      is_live               = string,
-      matches_storage_class = string,
+      matches_storage_class = list(string),
       num_newer_versions    = number
-    }))
+    })
   }))
 
   default = []
