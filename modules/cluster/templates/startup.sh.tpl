@@ -191,6 +191,28 @@ systemctl restart rsyslog
 curl -sSO https://dl.google.com/cloudagents/add-google-cloud-ops-agent-repo.sh
 sudo bash add-google-cloud-ops-agent-repo.sh --also-install
 
+# Install logrotate
+apt-get install -yqq logrotate
+
+# Configure logrotate for Vault audit logs
+mkdir -p /etc/logrotate.d
+cat <<"EOF" > /etc/logrotate.d/vaultproject.io
+/var/log/vault/*.log {
+  daily
+  rotate 3
+  missingok
+  compress
+  notifempty
+  create 0640 vault adm
+  sharedscripts
+  postrotate
+    /bin/systemctl reload vault 2> /dev/null
+    true
+  endscript
+}
+EOF
+
+
 #########################################
 ##          user_startup_script        ##
 #########################################
