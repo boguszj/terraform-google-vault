@@ -183,6 +183,13 @@ variable "kms_protection_level" {
   description = "The protection level to use for the KMS crypto key."
 }
 
+variable "kms_auto_rotate" {
+  type    = bool
+  default = true
+
+  description = "Should KMS key be automatically rotated. Rotated every 7 days if set to true."
+}
+
 #
 #
 # Networking
