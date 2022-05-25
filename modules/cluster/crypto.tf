@@ -23,9 +23,10 @@ resource "google_kms_key_ring" "vault" {
 
 # Create the crypto key for encrypting init keys
 resource "google_kms_crypto_key" "vault-init" {
-  name            = var.kms_crypto_key
-  key_ring        = google_kms_key_ring.vault.id
-  rotation_period = var.kms_auto_rotate ? "604800s" : null
+  name                          = var.kms_crypto_key
+  key_ring                      = google_kms_key_ring.vault.id
+  rotation_period               = var.kms_auto_rotate ? "604800s" : null
+  skip_initial_version_creation = var.kms_skip_initial_version_creation
 
   version_template {
     algorithm        = "GOOGLE_SYMMETRIC_ENCRYPTION"
