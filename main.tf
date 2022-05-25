@@ -64,6 +64,7 @@ module "cluster" {
   kms_crypto_key                               = var.kms_crypto_key
   kms_protection_level                         = var.kms_protection_level
   kms_auto_rotate                              = var.kms_auto_rotate
+  kms_skip_initial_version_creation            = var.kms_skip_initial_version_creation
   load_balancing_scheme                        = var.load_balancing_scheme
   vault_args                                   = var.vault_args
   vault_instance_labels                        = var.vault_instance_labels

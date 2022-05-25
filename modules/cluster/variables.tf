@@ -124,6 +124,13 @@ variable "kms_auto_rotate" {
   description = "Should KMS key be automatically rotated. Rotated every 7 days if set to true."
 }
 
+variable "kms_skip_initial_version_creation" {
+  type    = bool
+  default = false
+
+  description = "Should skip initial KMS key version creation."
+}
+
 #TODO: Evaluate https://www.terraform.io/docs/configuration/variables.html#custom-validation-rules when prod ready
 variable "load_balancing_scheme" {
   type    = string
