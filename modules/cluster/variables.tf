@@ -121,7 +121,7 @@ variable "kms_auto_rotate" {
   type    = bool
   default = true
 
-  description = "Should KMS key be automatically rotated. Rotated every 7 days if set to false."
+  description = "Should KMS key be automatically rotated. Rotated every 7 days if set to true."
 }
 
 #TODO: Evaluate https://www.terraform.io/docs/configuration/variables.html#custom-validation-rules when prod ready
