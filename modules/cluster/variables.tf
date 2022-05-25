@@ -128,7 +128,7 @@ variable "kms_skip_initial_version_creation" {
   type    = bool
   default = false
 
-  description = "Should initial KMS key version be created."
+  description = "Should skip initial KMS key version creation."
 }
 
 #TODO: Evaluate https://www.terraform.io/docs/configuration/variables.html#custom-validation-rules when prod ready
